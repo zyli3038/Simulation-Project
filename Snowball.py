@@ -6,9 +6,9 @@ K_down = 0.85
 S0 = 1
 ret = 0.2
 T = 1
-dt = 1 / 365
+dt = 1 / 252
 kappa = 2           # mean-reversion rate
-theta = (0.2)**2    # long-run variance
+theta = 0.13   # long-run variance
 r = 0.03            # risk-free interest rate
 sigma = 0.1
 rho = -0.02
@@ -50,14 +50,21 @@ S, V, Vcount0 = Sim_Price(numPaths, rho, S0, V0, T, kappa, theta, sigma, r, q)
 
 payoff = []
 
+up = 0
+down = 0
+
 for i in range(numPaths):
     price = S[:, i]
-    for j in range(int(T / dt)):
-        stock = price[j]
-        if stock >= K_up:
-            knock_up = True
-            payoff.append(ret * principal * j / 365)
-            break
+    knock_up = False
+    knock_down = False
+    for j in range(1, int(T / dt)+1):
+        stock = price[j-1]
+        if j % 21 == 0:  # knock out observation date
+            if stock >= K_up:
+                knock_up = True
+                payoff.append(ret * principal * j / 365)
+                up += 1
+                break
         if stock <= K_down:
             knock_down = True
     stock = price[-1]
@@ -65,8 +72,11 @@ for i in range(numPaths):
         continue
     if knock_down:
         payoff.append(principal * min(stock/S0 - 1, 0))
+        down += 1
         continue
     payoff.append(ret * principal * T*365 / 365)
 
+
 value = np.mean(payoff)
 print(value)
+print(up, down)
