@@ -1,19 +1,21 @@
+import random
+
 import numpy as np
 from math import sqrt
 
 K_up = 1.03
 K_down = 0.85
 S0 = 1
-ret = 0.2
+ret = 0.15
 T = 1
 dt = 1 / 252
-kappa = 2           # mean-reversion rate
-theta = 0.13   # long-run variance
-r = 0.03            # risk-free interest rate
-sigma = 0.1    # volatility of the volatility
-rho = -0.02.   # correlation coefficient
-V0 = (0.2)**2      # initial variance
-numPaths = 1000
+kappa = 0.003           # mean-reversion rate
+theta = 0.04            # long-run variance
+r = 0.015               # risk-free interest rate
+sigma = 0.3             # volatility of the volatility
+rho = -0.15             # correlation coefficient
+V0 = (0.2)**2           # initial variance
+numPaths = 10000        # number of paths
 q = 0
 principal = 1e4
 
@@ -22,6 +24,7 @@ knock_down = False
 
 
 def Sim_Price(numPaths, rho, S_0, V_0, T, kappa, theta, sigma, r, q):
+    random.seed(42)
     num_time = int(T / dt)
     S = np.zeros((num_time + 1, numPaths))
     S[0, :] = S_0
@@ -74,9 +77,9 @@ for i in range(numPaths):
         payoff.append(principal * min(stock/S0 - 1, 0))
         down += 1
         continue
-    payoff.append(ret * principal * T*365 / 365)
+    payoff.append(ret * principal * T * 365 / 365)
 
 
-value = np.mean(payoff)
-print(value)
-print(up, down)
+value = np.mean(payoff) * np.exp(-r * T)
+print("The net value of this callable option is:", value)
+print("There are {0} knock up and {1} knock down".format(up, down))
